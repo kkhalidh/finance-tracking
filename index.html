@@ -1,455 +1,903 @@
-<!DOCTYPE html>
+[7/29/2026 10:30 PM] Khalid: <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Neon Financial Command Center</title>
-  <!-- Chart.js CDN -->
-  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-  <style>
-    :root {
-      --bg: #050508;
-      --card-bg: #0b0d14;
-      --neon-cyan: #00f3ff;
-      --neon-magenta: #ff007f;
-      --neon-green: #00ff66;
-      --neon-amber: #ffaa00;
-      --neon-purple: #9d00ff;
-      --border-glow: 0 0 10px;
-      --text: #e0e6ed;
-    }
-
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', Consolas, sans-serif; }
-    body { background-color: var(--bg); color: var(--text); padding: 20px; }
-
-    header {
-      text-align: center;
-      margin-bottom: 25px;
-      padding: 15px;
-      border-bottom: 2px solid var(--neon-cyan);
-      box-shadow: 0 4px 20px rgba(0, 243, 255, 0.2);
-    }
-
-    header h1 {
-      font-size: 2.2rem;
-      color: #fff;
-      text-shadow: 0 0 8px var(--neon-cyan), 0 0 20px var(--neon-cyan);
-      letter-spacing: 2px;
-    }
-
-    /* Top Stats Grid */
-    .stats-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-      gap: 15px;
-      margin-bottom: 30px;
-    }
-
-    .stat-card {
-      background: var(--card-bg);
-      padding: 20px;
-      border-radius: 10px;
-      text-align: center;
-      border: 1px solid currentColor;
-      transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .stat-card:hover { transform: translateY(-3px); }
-    .stat-card.income { color: var(--neon-green); box-shadow: var(--border-glow) var(--neon-green); }
-    .stat-card.expense { color: var(--neon-magenta); box-shadow: var(--border-glow) var(--neon-magenta); }
-    .stat-card.bills { color: var(--neon-amber); box-shadow: var(--border-glow) var(--neon-amber); }
-    .stat-card.savings { color: var(--neon-cyan); box-shadow: var(--border-glow) var(--neon-cyan); }
-
-    .stat-card h3 { font-size: 0.9rem; text-transform: uppercase; color: #aaa; }
-    .stat-card p { font-size: 1.8rem; font-weight: bold; margin-top: 10px; }
-
-    /* Tables Grid */
-    .tables-container {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-      gap: 20px;
-      margin-bottom: 30px;
-    }
-
-    .table-card {
-      background: var(--card-bg);
-      border-radius: 8px;
-      padding: 15px;
-      border: 1px solid #222;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-    }
-
-    .table-card h2 {
-      font-size: 1.2rem;
-      margin-bottom: 15px;
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-    }
-
-    .income-header { color: var(--neon-green); text-shadow: 0 0 5px var(--neon-green); }
-    .expense-header { color: var(--neon-magenta); text-shadow: 0 0 5px var(--neon-magenta); }
-    .bills-header { color: var(--neon-amber); text-shadow: 0 0 5px var(--neon-amber); }
-    .savings-header { color: var(--neon-cyan); text-shadow: 0 0 5px var(--neon-cyan); }
-
-    table { width: 100%; border-collapse: collapse; }
-    th, td { padding: 6px 4px; text-align: left; }
-    th { font-size: 0.8rem; color: #888; border-bottom: 1px solid #333; }
-
-    input[type="text"], input[type="number"], input[type="date"] {
-      width: 100%;
-      background: #000;
-      border: 1px solid #333;
-      color: #fff;
-      padding: 6px;
-      border-radius: 4px;
-      outline: none;
-    }
-
-    input:focus { border-color: var(--neon-cyan); box-shadow: 0 0 5px var(--neon-cyan); }
-
-    .btn-action {
-      background: linear-gradient(45deg, var(--neon-purple), var(--neon-cyan));
-      border: none;
-      color: #fff;
-      padding: 8px 12px;
-      border-radius: 4px;
-      cursor: pointer;
-      font-weight: bold;
-      transition: 0.3s;
-    }
-    .btn-action:hover { opacity: 0.8; box-shadow: 0 0 10px var(--neon-cyan); }
-
-    /* Chart & Calendar Layout */
-    .dashboard-bottom {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 20px;
-    }
-
-    @media (max-width: 900px) { .dashboard-bottom { grid-template-columns: 1fr; } }
-
-    .chart-container, .calendar-container {
-      background: var(--card-bg);
-      border: 1px solid #222;
-      border-radius: 8px;
-      padding: 20px;
-      box-shadow: 0 0 15px rgba(0, 0, 0, 0.8);
-    }
-
-    /* 12 Month Calendar View */
-    .year-grid {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-      gap: 10px;
-      max-height: 400px;
-      overflow-y: auto;
-    }
-
-    .month-box {
-      background: #000;
-      border: 1px solid #333;
-      padding: 8px;
-      border-radius: 6px;
-    }
-
-    .month-title { font-size: 0.85rem; font-weight: bold; color: var(--neon-cyan); text-align: center; margin-bottom: 5px; }
-    .days-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; text-align: center; font-size: 0.7rem; }
-    .day-cell { padding: 4px; border-radius: 2px; background: #111; cursor: pointer; }
-    .day-cell:hover { background: var(--neon-purple); }
-    .day-cell.pinned { background: var(--neon-magenta); color: #fff; font-weight: bold; box-shadow: 0 0 5px var(--neon-magenta); }
-
-    /* Verification Modal */
-    .modal {
-      display: none;
-      position: fixed;
-      top: 0; left: 0; width: 100%; height: 100%;
-      background: rgba(0,0,0,0.85);
-      justify-content: center;
-      align-items: center;
-      z-index: 1000;
-    }
-
-    .modal-content {
-      background: var(--card-bg);
-      border: 2px solid var(--neon-cyan);
-      box-shadow: 0 0 20px var(--neon-cyan);
-      width: 400px;
-      padding: 25px;
-      border-radius: 8px;
-    }
-
-    .modal-content h3 { color: var(--neon-cyan); margin-bottom: 15px; }
-    .form-group { margin-bottom: 12px; }
-    .form-group label { display: block; font-size: 0.8rem; margin-bottom: 4px; color: #aaa; }
-  </style>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial Command Center - Annual, Monthly & Track Breakdown Suite</title>
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        body { background-color: #050505; color: #e5e7eb; font-family: ui-sans-serif, system-ui, sans-serif; }
+        .neon-box-green { border: 1px solid #10b981; box-shadow: 0 0 10px rgba(16, 185, 129, 0.15); }
+        .neon-box-red { border: 1px solid #ef4444; box-shadow: 0 0 10px rgba(239, 68, 68, 0.15); }
+        .neon-box-purple { border: 1px solid #a855f7; box-shadow: 0 0 10px rgba(168, 85, 247, 0.15); }
+        .neon-box-yellow { border: 1px solid #eab308; box-shadow: 0 0 10px rgba(234, 179, 8, 0.15); }
+        .neon-box-blue { border: 1px solid #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.15); }
+        input, select { background-color: #121212 !important; border-color: #262626 !important; color: white !important; }
+        .slicer-btn.active { background-color: rgba(59, 130, 246, 0.2); border-color: #3b82f6; box-shadow: 0 0 10px rgba(59, 130, 246, 0.3); color: #3b82f6; }
+        .view-btn.active { background-color: #3b82f6; color: white; border-color: #3b82f6; }
+    </style>
 </head>
-<body>
+<body class="p-4 md:p-8">
 
-  <header>
-    <h1>⚡ FINANCIAL COMMAND CENTER</h1>
-  </header>
+    <div class="max-w-7xl mx-auto space-y-6">
+        <!-- Top Bar / View Switcher Header -->
+        <header class="flex flex-col md:flex-row justify-between items-start md:items-center bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800 gap-4">
+            <div>
+                <h1 id="header-title" class="text-2xl font-bold tracking-widest text-white uppercase">FINANCIAL COMMAND CENTER</h1>
+                <p id="header-subtitle" class="text-xs text-neutral-400">Live Updating Dashboard, Annual Review & Dedicated Category Track Analytics</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-3">
+                <!-- View Mode Switcher -->
+                <div class="flex bg-[#121212] p-1 rounded-lg border border-neutral-800">
+                    <button onclick="switchView('monthly')" id="btn-view-monthly" class="view-btn active px-3 py-1.5 text-xs font-bold rounded-md transition">Monthly View</button>
+                    <button onclick="switchView('annual')" id="btn-view-annual" class="view-btn px-3 py-1.5 text-xs font-bold rounded-md transition text-neutral-400">Annual Review & 12-Month Calendar</button>
+                    <button onclick="switchView('tracks')" id="btn-view-tracks" class="view-btn px-3 py-1.5 text-xs font-bold rounded-md transition text-neutral-400">Track Analytics Suite</button>
+                </div>
+                
+                <div id="monthly-filter-wrap">
+                    <select id="month-filter" class="px-4 py-2 text-sm font-semibold rounded-lg border outline-none">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <div id="annual-filter-wrap" class="hidden">
+                    <select id="year-filter" class="px-4 py-2 text-sm font-semibold rounded-lg border outline-none">
+                        <!-- Populated by JS -->
+                    </select>
+                </div>
+                <button onclick="setGoal()" class="px-4 py-2 text-xs font-bold uppercase rounded-lg bg-neutral-900 border border-neutral-700 hover:border-emerald-500 transition text-emerald-400">Set Monthly Goal</button>
+            </div>
+        </header>
 
-  <!-- Top Metrics -->
-  <section class="stats-grid">
-    <div class="stat-card income">
-      <h3>Total Income</h3>
-      <p id="total-income">$0.00</p>
+        <!-- ================= MONTHLY VIEW CONTAINER ================= -->
+        <div id="monthly-view-container" class="space-y-6">
+            <!-- KPI Summary Cards Row -->
+[7/29/2026 10:30 PM] Khalid: <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="bg-[#0a0a0a] p-4 rounded-xl neon-box-blue">
+                    <p class="text-xs text-neutral-400 uppercase font-semibold">Left for Budgeting</p>
+                    <p id="kpi-left-budget" class="text-xl font-bold text-blue-400 mt-1">$0.00</p>
+                </div>
+                <div class="bg-[#0a0a0a] p-4 rounded-xl neon-box-red">
+                    <p class="text-xs text-neutral-400 uppercase font-semibold">Total Budgeted</p>
+                    <p id="kpi-total-budgeted" class="text-xl font-bold text-red-400 mt-1">$0.00</p>
+                </div>
+                <div class="bg-[#0a0a0a] p-4 rounded-xl neon-box-blue">
+                    <p class="text-xs text-neutral-400 uppercase font-semibold">Left to Spend</p>
+                    <p id="kpi-left-spend" class="text-xl font-bold text-cyan-400 mt-1">$0.00</p>
+                </div>
+                <div class="bg-[#0a0a0a] p-4 rounded-xl neon-box-green">
+                    <p class="text-xs text-neutral-400 uppercase font-semibold">Total Spent</p>
+                    <p id="kpi-total-spent" class="text-xl font-bold text-emerald-400 mt-1">$0.00</p>
+                </div>
+                <div class="bg-[#0a0a0a] p-4 rounded-xl neon-box-yellow col-span-2 md:col-span-1">
+                    <p class="text-xs text-neutral-400 uppercase font-semibold">Savings Balance</p>
+                    <p id="kpi-savings-bal" class="text-xl font-bold text-yellow-400 mt-1">$0.00</p>
+                </div>
+            </div>
+
+            <!-- CUSTOM ICON SLICERS ROW -->
+            <div class="bg-[#0a0a0a] p-4 rounded-xl border border-neutral-800 flex flex-wrap items-center justify-between gap-3">
+                <div class="text-xs font-bold uppercase tracking-wider text-neutral-400">Custom Icon Slicers:</div>
+                <div class="flex flex-wrap gap-2" id="icon-slicers-container">
+                    <button onclick="setSlicer('ALL')" id="slicer-ALL" class="slicer-btn active px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2">
+                        ⚡ All Categories
+                    </button>
+                    <button onclick="setSlicer('Income')" id="slicer-Income" class="slicer-btn px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2 text-emerald-400">
+                        📈 Income
+                    </button>
+                    <button onclick="setSlicer('Expenses')" id="slicer-Expenses" class="slicer-btn px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2 text-red-400">
+                        🛒 Expenses
+                    </button>
+                    <button onclick="setSlicer('Savings')" id="slicer-Savings" class="slicer-btn px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2 text-blue-400">
+                        💰 Savings
+                    </button>
+                    <button onclick="setSlicer('Bills')" id="slicer-Bills" class="slicer-btn px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2 text-purple-400">
+                        📄 Bills
+                    </button>
+                    <button onclick="setSlicer('Debts')" id="slicer-Debts" class="slicer-btn px-4 py-2 rounded-lg border border-neutral-800 bg-[#121212] text-xs font-bold transition flex items-center gap-2 text-yellow-400">
+                        💳 Debts
+                    </button>
+                </div>
+            </div>
+
+            <!-- Dynamic Charts & Visual Overview Row -->
+            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+[7/29/2026 10:30 PM] Khalid: <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300 mb-4">Dynamic Cash Flow Ring</h3>
+                    <div class="relative h-48"><canvas id="cashFlowChart"></canvas></div>
+                </div>
+                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300 mb-4">Budget vs Actual Bar</h3>
+                    <div class="relative h-48"><canvas id="budgetActualChart"></canvas></div>
+                </div>
+                <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300 mb-4">Net Balance Trend</h3>
+                    <div class="relative h-48"><canvas id="balanceLineChart"></canvas></div>
+                </div>
+            </div>
+
+            <!-- Single Month Calendar & Event Pinning Section -->
+            <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300">Month Calendar & Pinned Special Days</h3>
+                    <span class="text-xs text-neutral-400">Click any date to pin an event</span>
+                </div>
+                <div id="calendar-grid" class="grid grid-cols-7 gap-2"></div>
+            </div>
+        </div>
+
+        <!-- ================= ANNUAL REVIEW & 12-MONTH CALENDAR CONTAINER ================= -->
+        <div id="annual-view-container" class="space-y-6 hidden">
+            <!-- Annual Summary Breakdown Box -->
+            <div class="bg-[#0a0a0a] p-6 rounded-xl neon-box-blue space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-neutral-800 pb-4 gap-4">
+                    <div>
+                        <h2 id="annual-review-title" class="text-lg font-bold text-blue-400 uppercase tracking-wide">Annual Financial Review & Spending Breakdown</h2>
+                        <p class="text-xs text-neutral-400 mt-1">Complete aggregation of all 12 months for the selected year</p>
+                    </div>
+                    <div class="flex gap-4">
+                        <div class="bg-[#121212] px-4 py-2 rounded-lg border border-neutral-800 text-right">
+                            <span class="text-[10px] text-neutral-400 block uppercase font-bold">Total Spent (Year)</span>
+                            <span id="annual-total-spent" class="text-lg font-bold text-emerald-400">$0.00</span>
+                        </div>
+                        <div class="bg-[#121212] px-4 py-2 rounded-lg border border-neutral-800 text-right">
+                            <span class="text-[10px] text-neutral-400 block uppercase font-bold">Total Saved (Year)</span>
+                            <span id="annual-total-saved" class="text-lg font-bold text-yellow-400">$0.00</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- On What I Spent It Breakdown Grid -->
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div class="bg-[#121212] p-4 rounded-xl border border-neutral-800 space-y-3">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-300">Spending Breakdown (On What I Spent It)</h3>
+                        <div id="annual-spending-breakdown" class="space-y-2 max-h-60 overflow-y-auto pr-1">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="bg-[#121212] p-4 rounded-xl border border-neutral-800">
+[7/29/2026 10:30 PM] Khalid: <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300 mb-3">Annual Trend Overview</h3>
+                        <div class="relative h-52"><canvas id="annualTrendChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Full Year 12-Month Calendar Grid View -->
+            <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800 space-y-4">
+                <div class="flex justify-between items-center">
+                    <h3 class="text-sm font-bold uppercase tracking-wider text-neutral-300">Full 12-Month Calendar View (All Months)</h3>
+                    <span class="text-xs text-neutral-400">Overview of all months and pinned dates across the year</span>
+                </div>
+                <div id="full-year-calendar-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+                    <!-- Populated dynamically with all 12 months -->
+                </div>
+            </div>
+        </div>
+
+        <!-- ================= DEDICATED TRACK ANALYTICS SUITE (NEW) ================= -->
+        <div id="tracks-view-container" class="space-y-6 hidden">
+            <div class="bg-[#0a0a0a] p-6 rounded-xl border border-neutral-800 space-y-6">
+                <div class="flex flex-col md:flex-row justify-between items-start md:items-center border-b border-neutral-800 pb-4 gap-4">
+                    <div>
+                        <h2 class="text-lg font-bold text-purple-400 uppercase tracking-wide">Dedicated Track Analytics Suite</h2>
+                        <p class="text-xs text-neutral-400 mt-1">Deep-dive into each individual track category to inspect exact dates of earnings, expenses, and debt acquisitions.</p>
+                    </div>
+                    <div>
+                        <select id="track-selector" onchange="renderTrackAnalytics()" class="px-4 py-2 text-xs font-semibold rounded-lg border outline-none">
+                            <option value="Expenses">🛒 Expenses Track</option>
+                            <option value="Income">📈 Income Track</option>
+                            <option value="Debts">💳 Debts Track</option>
+                            <option value="Savings">💰 Savings Track</option>
+                            <option value="Bills">📄 Bills Track</option>
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Track Summary & Timeline Grid -->
+                <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <div class="bg-[#121212] p-5 rounded-xl border border-neutral-800 space-y-4">
+                        <h3 id="track-card-title" class="text-xs font-bold uppercase tracking-wider text-neutral-300">Track Summary & Timeline</h3>
+                        <div class="space-y-2">
+                            <p class="text-xs text-neutral-400">Total Track Volume: <span id="track-total-val" class="font-bold text-white">$0.00</span></p>
+                            <p class="text-xs text-neutral-400">Peak Activity Date: <span id="track-peak-date" class="font-bold text-yellow-400">None</span></p>
+                        </div>
+                        <div class="max-h-60 overflow-y-auto space-y-2 pt-2" id="track-items-timeline">
+                            <!-- Populated dynamically -->
+                        </div>
+                    </div>
+                    <div class="lg:col-span-2 bg-[#121212] p-5 rounded-xl border border-neutral-800 space-y-4">
+                        <h3 class="text-xs font-bold uppercase tracking-wider text-neutral-300">Chronological Timeline & Distribution Chart</h3>
+                        <div class="relative h-64"><canvas id="trackDetailChart"></canvas></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+[7/29/2026 10:30 PM] Khalid: <!-- Data Input Tables Grid (Always Accessible for Live Entry) -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+            <!-- INCOME -->
+            <div class="bg-[#0a0a0a] p-5 rounded-xl neon-box-green space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+                    <h2 class="font-bold text-emerald-400 uppercase tracking-wide text-sm">Income Sources</h2>
+                    <span id="total-income-header" class="text-xs font-mono text-emerald-400">$0.00</span>
+                </div>
+                <form id="income-form" class="space-y-2">
+                    <input type="text" id="inc-source" placeholder="Source (e.g. Salary)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="inc-expected" step="0.01" placeholder="Expected ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="inc-actual" step="0.01" placeholder="Actual Received ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="date" id="inc-date" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <button type="submit" class="w-full py-1.5 bg-emerald-600 text-black font-bold rounded text-xs hover:bg-emerald-500 transition">Add Income</button>
+                </form>
+                <div class="max-h-48 overflow-y-auto space-y-2 pt-2" id="income-list"></div>
+            </div>
+
+            <!-- EXPENSES -->
+            <div class="bg-[#0a0a0a] p-5 rounded-xl neon-box-red space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+                    <h2 class="font-bold text-red-400 uppercase tracking-wide text-sm">Expenses</h2>
+                    <span id="total-expense-header" class="text-xs font-mono text-red-400">$0.00</span>
+                </div>
+                <form id="expense-form" class="space-y-2">
+                    <input type="text" id="exp-title" placeholder="Category (e.g. Groceries)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="exp-budget" step="0.01" placeholder="Budgeted ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="exp-actual" step="0.01" placeholder="Actual Spent ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="date" id="exp-date" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <button type="submit" class="w-full py-1.5 bg-red-600 text-white font-bold rounded text-xs hover:bg-red-500 transition">Add Expense</button>
+                </form>
+                <div class="max-h-48 overflow-y-auto space-y-2 pt-2" id="expense-list"></div>
+            </div>
+
+            <!-- SAVINGS WITH ANTI-DUPLICATE GUARD -->
+            <div class="bg-[#0a0a0a] p-5 rounded-xl neon-box-blue space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+                    <h2 class="font-bold text-blue-400 uppercase tracking-wide text-sm">Savings & Unique Proof</h2>
+                    <span id="total-savings-header" class="text-xs font-mono text-blue-400">$0.00</span>
+                </div>
+                <form id="savings-form" class="space-y-2">
+                    <input type="text" id="sav-title" placeholder="Goal (e.g. Emergency Fund)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="text" id="sav-txid" placeholder="Transaction ID / Receipt Number" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="sav-amount" step="0.01" placeholder="Deposit Amount ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+[7/29/2026 10:30 PM] Khalid: <input type="date" id="sav-date" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <div>
+                        <label class="block text-[10px] text-neutral-400 mb-1">Upload Receipt Screenshot Proof:</label>
+                        <input type="file" id="sav-screenshot" accept="image/*" required class="w-full text-xs text-neutral-400 file:mr-2 file:py-1 file:px-2 file:rounded file:border-0 file:text-[10px] file:font-semibold file:bg-neutral-800 file:text-blue-400">
+                    </div>
+                    <button type="submit" class="w-full py-1.5 bg-blue-600 text-white font-bold rounded text-xs hover:bg-blue-500 transition">Deposit & Guard Check</button>
+                </form>
+                <div class="max-h-40 overflow-y-auto space-y-2 pt-2" id="savings-list"></div>
+            </div>
+
+            <!-- BILLS -->
+            <div class="bg-[#0a0a0a] p-5 rounded-xl neon-box-purple space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+                    <h2 class="font-bold text-purple-400 uppercase tracking-wide text-sm">Bills</h2>
+                    <span id="total-bills-header" class="text-xs font-mono text-purple-400">$0.00</span>
+                </div>
+                <form id="bill-form" class="space-y-2">
+                    <input type="text" id="bill-title" placeholder="Bill Name (e.g. Netflix)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="bill-amount" step="0.01" placeholder="Amount ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="date" id="bill-date" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <button type="submit" class="w-full py-1.5 bg-purple-600 text-white font-bold rounded text-xs hover:bg-purple-500 transition">Add Bill</button>
+                </form>
+                <div class="max-h-48 overflow-y-auto space-y-2 pt-2" id="bill-list"></div>
+            </div>
+
+            <!-- DEBTS -->
+            <div class="bg-[#0a0a0a] p-5 rounded-xl neon-box-yellow space-y-4">
+                <div class="flex justify-between items-center border-b border-neutral-800 pb-2">
+                    <h2 class="font-bold text-yellow-400 uppercase tracking-wide text-sm">Debts</h2>
+                    <span id="total-debts-header" class="text-xs font-mono text-yellow-400">$0.00</span>
+                </div>
+                <form id="debt-form" class="space-y-2">
+                    <input type="text" id="debt-title" placeholder="Debt Name (e.g. Car Loan)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="number" id="debt-amount" step="0.01" placeholder="Amount Owed ($)" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <input type="date" id="debt-date" required class="w-full px-3 py-1.5 text-xs rounded border">
+                    <button type="submit" class="w-full py-1.5 bg-yellow-600 text-black font-bold rounded text-xs hover:bg-yellow-500 transition">Add Debt</button>
+                </form>
+                <div class="max-h-48 overflow-y-auto space-y-2 pt-2" id="debt-list"></div>
+            </div>
+        </div>
     </div>
-    <div class="stat-card expense">
-      <h3>Total Expenses</h3>
-      <p id="total-expenses">$0.00</p>
+
+    <!-- Image Modal -->
+    <div id="imageModal" class="fixed inset-0 bg-black/90 hidden items-center justify-center p-4 z-50">
+        <div class="relative max-w-md w-full bg-[#0a0a0a] p-4 rounded-xl border border-neutral-800">
+            <button onclick="closeModal()" class="absolute top-2 right-3 text-neutral-400 font-bold text-xl">&times;</button>
+            <h3 class="text-xs font-semibold uppercase mb-2 text-white">Savings Proof Verification</h3>
+            <img id="modalImage" src="" alt="Screenshot" class="w-full h-auto rounded-lg max-h-[60vh] object-contain">
+        </div>
     </div>
-    <div class="stat-card bills">
-      <h3>Bills & Debts</h3>
-      <p id="total-bills">$0.00</p>
-    </div>
-    <div class="stat-card savings">
-      <h3>Verified Savings</h3>
-      <p id="total-savings">$0.00</p>
-    </div>
-  </section>
+[7/29/2026 10:30 PM] Khalid: <!-- Logic Script -->
+    <script>
+        let incomes = JSON.parse(localStorage.getItem('sheet_incomes')) || [];
+        let expenses = JSON.parse(localStorage.getItem('sheet_expenses')) || [];
+        let savings = JSON.parse(localStorage.getItem('sheet_savings')) || [];
+        let bills = JSON.parse(localStorage.getItem('sheet_bills')) || [];
+        let debts = JSON.parse(localStorage.getItem('sheet_debts')) || [];
+        let calendarEvents = JSON.parse(localStorage.getItem('sheet_calendar_events')) || {};
+        let monthlyGoal = parseFloat(localStorage.getItem('sheet_goal')) || 1500;
+        let activeSlicer = 'ALL';
+        let currentView = 'monthly'; // 'monthly', 'annual', or 'tracks'
 
-  <!-- Financial Tables (15 lines each) -->
-  <section class="tables-container">
-    <!-- Income -->
-    <div class="table-card">
-      <h2 class="income-header">Income Sources</h2>
-      <table>
-        <thead><tr><th>Description</th><th>Amount ($)</th></tr></thead>
-        <tbody id="income-rows"></tbody>
-      </table>
-    </div>
+        let cashFlowChartInst = null;
+        let budgetActualChartInst = null;
+        let balanceLineChartInst = null;
+        let annualTrendChartInst = null;
+        let trackDetailChartInst = null;
 
-    <!-- Expenses -->
-    <div class="table-card">
-      <h2 class="expense-header">Daily Expenses</h2>
-      <table>
-        <thead><tr><th>Category</th><th>Amount ($)</th></tr></thead>
-        <tbody id="expense-rows"></tbody>
-      </table>
-    </div>
-
-    <!-- Bills & Debts -->
-    <div class="table-card">
-      <h2 class="bills-header">Bills & Debts</h2>
-      <table>
-        <thead><tr><th>Bill Name</th><th>Amount ($)</th></tr></thead>
-        <tbody id="bills-rows"></tbody>
-      </table>
-    </div>
-
-    <!-- Savings -->
-    <div class="table-card">
-      <h2 class="savings-header">
-        Savings Accounts
-        <button class="btn-action" onclick="openDepositModal()">+ Deposit</button>
-      </h2>
-      <table>
-        <thead><tr><th>Target/Account</th><th>Verified ($)</th></tr></thead>
-        <tbody id="savings-rows"></tbody>
-      </table>
-    </div>
-  </section>
-
-  <!-- Chart & Calendar -->
-  <section class="dashboard-bottom">
-    <div class="chart-container">
-      <h2 style="color: var(--neon-purple); margin-bottom: 15px;">Cashflow Breakdown</h2>
-      <canvas id="cashflowChart"></canvas>
-    </div>
-
-    <div class="calendar-container">
-      <h2 style="color: var(--neon-cyan); margin-bottom: 15px;">Yearly Calendar & Pinned Events</h2>
-      <div class="year-grid" id="yearGrid"></div>
-    </div>
-  </section>
-
-  <!-- Screenshot Verification Modal -->
-  <div class="modal" id="depositModal">
-    <div class="modal-content">
-      <h3>Verify Deposit Screenshot</h3>
-      <div class="form-group">
-        <label>Transaction / Ref Number</label>
-        <input type="text" id="txNumber" placeholder="e.g. TXN-998231" required>
-      </div>
-      <div class="form-group">
-        <label>Deposit Date</label>
-        <input type="date" id="txDate" required>
-      </div>
-      <div class="form-group">
-        <label>Amount ($)</label>
-        <input type="number" id="txAmount" placeholder="0.00" required>
-      </div>
-      <div class="form-group">
-        <label>Upload Screenshot Receipt</label>
-        <input type="file" id="txFile" accept="image/*" required>
-      </div>
-      <div style="display: flex; gap: 10px; margin-top: 20px;">
-        <button class="btn-action" style="flex:1;" onclick="processDeposit()">Verify & Add</button>
-        <button class="btn-action" style="background: #333; flex:1;" onclick="closeDepositModal()">Cancel</button>
-      </div>
-    </div>
-  </div>
-
-  <script>
-    // System State & Used Transactions Registry (To prevent duplicates)
-    const usedTransactions = new Set();
-    let verifiedSavingsTotal = 0;
-    let cashflowChart;
-
-    // Generate 15 Table Rows dynamically
-    function generateTableRows(containerId, prefix) {
-      const container = document.getElementById(containerId);
-      for (let i = 1; i <= 15; i++) {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-          <td><input type="text" placeholder="${prefix} #${i}"></td>
-          <td><input type="number" class="${containerId}-val" placeholder="0.00" oninput="calculateTotals()"></td>
-        `;
-        container.appendChild(tr);
-      }
-    }
-
-    // Initialize UI
-    window.onload = () => {
-      generateTableRows('income-rows', 'Income');
-      generateTableRows('expense-rows', 'Expense');
-      generateTableRows('bills-rows', 'Bill/Debt');
-      generateTableRows('savings-rows', 'Savings Goal');
-      
-      initChart();
-      generateCalendar();
-    };
-
-    // Live Calculation
-    function calculateTotals() {
-      const getSum = (className) => {
-        let sum = 0;
-        document.querySelectorAll('.' + className).forEach(input => {
-          sum += parseFloat(input.value) || 0;
+        const todayStr = new Date().toISOString().split('T')[0];
+        ['inc-date', 'exp-date', 'sav-date', 'bill-date', 'debt-date'].forEach(id => {
+            document.getElementById(id).value = todayStr;
         });
-        return sum;
-      };
 
-      const income = getSum('income-rows-val');
-      const expenses = getSum('expense-rows-val');
-      const bills = getSum('bills-rows-val');
-      const savings = getSum('savings-rows-val') + verifiedSavingsTotal;
+        const monthFilter = document.getElementById('month-filter');
+        const yearFilter = document.getElementById('year-filter');
 
-      document.getElementById('total-income').innerText = `$${income.toFixed(2)}`;
-      document.getElementById('total-expenses').innerText = `$${expenses.toFixed(2)}`;
-      document.getElementById('total-bills').innerText = `$${bills.toFixed(2)}`;
-      document.getElementById('total-savings').innerText = `$${savings.toFixed(2)}`;
+        function initFilters() {
+            let monthsSet = new Set();
+            let yearsSet = new Set();
 
-      updateChart(income, expenses, bills, savings);
-    }
+            [...incomes, ...expenses, ...savings, ...bills, ...debts].forEach(item => {
+                if(item.date) {
+                    monthsSet.add(item.date.substring(0, 7));
+                    yearsSet.add(item.date.substring(0, 4));
+                }
+            });
+            const currentYearStr = todayStr.substring(0, 4);
+            monthsSet.add(todayStr.substring(0, 7));
+            yearsSet.add(currentYearStr);
 
-    // Deposit Modal Operations
-    function openDepositModal() {
-      document.getElementById('depositModal').style.display = 'flex';
-    }
+            let sortedMonths = Array.from(monthsSet).sort().reverse();
+            monthFilter.innerHTML = '';
+            sortedMonths.forEach(m => {
+                let opt = document.createElement('option');
+                opt.value = m;
+                opt.textContent = new Date(m + "-01").toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+                monthFilter.appendChild(opt);
+            });
+            if(sortedMonths.length > 0 && !monthFilter.value) monthFilter.value = sortedMonths[0];
 
-    function closeDepositModal() {
-      document.getElementById('depositModal').style.display = 'none';
-    }
-
-    function processDeposit() {
-      const txNum = document.getElementById('txNumber').value.trim();
-      const txDate = document.getElementById('txDate').value;
-      const txAmount = parseFloat(document.getElementById('txAmount').value);
-      const txFile = document.getElementById('txFile').files[0];
-
-      if (!txNum || !txDate || !txAmount || !txFile) {
-        alert('Verification Failed: Please complete all fields and select a screenshot.');
-        return;
-      }
-
-      // Check for duplicate transaction ID
-      if (usedTransactions.has(txNum)) {
-        alert('SECURITY WARNING: Duplicate Transaction ID detected! This screenshot/receipt has already been used.');
-        return;
-      }
-
-      // Record & Approve
-      usedTransactions.add(txNum);
-      verifiedSavingsTotal += txAmount;
-
-      alert(`Deposit Verified!\nRef: ${txNum}\nAmount: $${txAmount.toFixed(2)}\nStatus: Recorded and Locked.`);
-      
-      // Auto-fill into first available savings slot
-      const savingsInputs = document.querySelectorAll('.savings-rows-val');
-      for (let input of savingsInputs) {
-        if (!input.value || input.value == 0) {
-          input.value = txAmount;
-          break;
+            let sortedYears = Array.from(yearsSet).sort().reverse();
+            yearFilter.innerHTML = '';
+            sortedYears.forEach(y => {
+                let opt = document.createElement('option');
+                opt.value = y;
+                opt.textContent = y;
+                yearFilter.appendChild(opt);
+            });
+            if(sortedYears.length > 0 && !yearFilter.value) yearFilter.value = sortedYears[0];
         }
-      }
 
-      closeDepositModal();
-      calculateTotals();
+        monthFilter.addEventListener('change', updateUI);
+        yearFilter.addEventListener('change', updateUI);
 
-      // Reset modal inputs
-      document.getElementById('txNumber').value = '';
-      document.getElementById('txDate').value = '';
-      document.getElementById('txAmount').value = '';
-      document.getElementById('txFile').value = '';
-    }
+        function switchView(view) {
+            currentView = view;
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active', 'text-white'));
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.add('text-neutral-400'));
+            
+            document.getElementById('monthly-view-container').classList.add('hidden');
+            document.getElementById('annual-view-container').classList.add('hidden');
+            document.getElementById('tracks-view-container').classList.add('hidden');
+            document.getElementById('monthly-filter-wrap').classList.add('hidden');
+            document.getElementById('annual-filter-wrap').classList.add('hidden');
 
-    // Render Chart
-    function initChart() {
-      const ctx = document.getElementById('cashflowChart').getContext('2d');
-      cashflowChart = new Chart(ctx, {
-        type: 'doughnut',
-        data: {
-          labels: ['Income', 'Expenses', 'Bills', 'Savings'],
-          datasets: [{
-            data: [0, 0, 0, 0],
-            backgroundColor: ['#00ff66', '#ff007f', '#ffaa00', '#00f3ff'],
-            borderWidth: 0
-          }]
-        },
-        options: {
-          responsive: true,
-          plugins: { legend: { labels: { color: '#fff' } } }
+            if(view === 'monthly') {
+                document.getElementById('btn-view-monthly').classList.add('active', 'text-white');
+                document.getElementById('btn-view-monthly').classList.remove('text-neutral-400');
+[7/29/2026 10:30 PM] Khalid: document.getElementById('monthly-view-container').classList.remove('hidden');
+                document.getElementById('monthly-filter-wrap').classList.remove('hidden');
+                document.getElementById('header-title').textContent = "FINANCIAL COMMAND CENTER";
+            } else if(view === 'annual') {
+                document.getElementById('btn-view-annual').classList.add('active', 'text-white');
+                document.getElementById('btn-view-annual').classList.remove('text-neutral-400');
+                document.getElementById('annual-view-container').classList.remove('hidden');
+                document.getElementById('annual-filter-wrap').classList.remove('hidden');
+                document.getElementById('header-title').textContent = "ANNUAL FINANCIAL REVIEW & FULL-YEAR CALENDAR";
+            } else if(view === 'tracks') {
+                document.getElementById('btn-view-tracks').classList.add('active', 'text-white');
+                document.getElementById('btn-view-tracks').classList.remove('text-neutral-400');
+                document.getElementById('tracks-view-container').classList.remove('hidden');
+                document.getElementById('header-title').textContent = "DEDICATED TRACK ANALYTICS SUITE";
+                renderTrackAnalytics();
+            }
+            updateUI();
         }
-      });
-    }
 
-    function updateChart(income, expenses, bills, savings) {
-      cashflowChart.data.datasets[0].data = [income, expenses, bills, savings];
-      cashflowChart.update();
-    }
-
-    // Generate 12-Month Calendar
-    function generateCalendar() {
-      const yearGrid = document.getElementById('yearGrid');
-      const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-      
-      months.forEach((month, index) => {
-        const monthBox = document.createElement('div');
-        monthBox.className = 'month-box';
-        
-        let daysHtml = `<div class="month-title">${month}</div><div class="days-grid">`;
-        for (let d = 1; d <= 28; d++) {
-          daysHtml += `<div class="day-cell" onclick="togglePin(this, '${month} ${d}')">${d}</div>`;
+        function setSlicer(category) {
+            activeSlicer = category;
+            document.querySelectorAll('.slicer-btn').forEach(btn => btn.classList.remove('active'));
+            document.getElementById('slicer-' + category).classList.add('active');
+            updateUI();
         }
-        daysHtml += `</div>`;
-        
-        monthBox.innerHTML = daysHtml;
-        yearGrid.appendChild(monthBox);
-      });
-    }
 
-    function togglePin(element, dateStr) {
-      element.classList.toggle('pinned');
-      if (element.classList.contains('pinned')) {
-        const note = prompt(`Pin note for ${dateStr}:`);
-        if (note) element.title = note;
-      } else {
-        element.title = '';
-      }
-    }
-  </script>
+        // Form Event Listeners
+        document.getElementById('income-form').addEventListener('submit', e => {
+            e.preventDefault();
+            incomes.push({
+                id: Date.now(),
+                source: document.getElementById('inc-source').value,
+                expected: parseFloat(document.getElementById('inc-expected').value),
+                actual: parseFloat(document.getElementById('inc-actual').value),
+                date: document.getElementById('inc-date').value
+            });
+            saveAndRefresh();
+            e.target.reset();
+            document.getElementById('inc-date').value = todayStr;
+        });
+
+        document.getElementById('expense-form').addEventListener('submit', e => {
+            e.preventDefault();
+            expenses.push({
+                id: Date.now(),
+                title: document.getElementById('exp-title').value,
+                budget: parseFloat(document.getElementById('exp-budget').value),
+                actual: parseFloat(document.getElementById('exp-actual').value),
+                date: document.getElementById('exp-date').value
+            });
+            saveAndRefresh();
+            e.target.reset();
+            document.getElementById('exp-date').value = todayStr;
+        });
+
+        document.getElementById('savings-form').addEventListener('submit', e => {
+            e.preventDefault();
+            const txIdInput = document.getElementById('sav-txid').value.trim();
+            const file = document.getElementById('sav-screenshot').files[0];
+
+            const duplicateTx = savings.some(s => s.txId && s.txId.toLowerCase() === txIdInput.toLowerCase());
+            if (duplicateTx) {
+                alert("⚠️ Duplicate Alert: Transaction ID '" + txIdInput + "' has already been used before!");
+                return;
+            }
+
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(evt) {
+                    const base64Image = evt.target.result;
+                    const duplicateImage = savings.some(s => s.proof === base64Image);
+                    if (duplicateImage) {
+                        alert("⚠️ Duplicate Alert: This exact receipt screenshot has already been uploaded previously!");
+                        return;
+                    }
+[7/29/2026 10:30 PM] Khalid: savings.push({
+                        id: Date.now(),
+                        title: document.getElementById('sav-title').value,
+                        txId: txIdInput,
+                        amount: parseFloat(document.getElementById('sav-amount').value),
+                        date: document.getElementById('sav-date').value,
+                        proof: base64Image
+                    });
+                    saveAndRefresh();
+                    e.target.reset();
+                    document.getElementById('sav-date').value = todayStr;
+                };
+                reader.readAsDataURL(file);
+            }
+        });
+
+        document.getElementById('bill-form').addEventListener('submit', e => {
+            e.preventDefault();
+            bills.push({
+                id: Date.now(),
+                title: document.getElementById('bill-title').value,
+                amount: parseFloat(document.getElementById('bill-amount').value),
+                date: document.getElementById('bill-date').value
+            });
+            saveAndRefresh();
+            e.target.reset();
+            document.getElementById('bill-date').value = todayStr;
+        });
+
+        document.getElementById('debt-form').addEventListener('submit', e => {
+            e.preventDefault();
+            debts.push({
+                id: Date.now(),
+                title: document.getElementById('debt-title').value,
+                amount: parseFloat(document.getElementById('debt-amount').value),
+                date: document.getElementById('debt-date').value
+            });
+            saveAndRefresh();
+            e.target.reset();
+            document.getElementById('debt-date').value = todayStr;
+        });
+
+        function removeItem(id, type) {
+            if(type==='inc') incomes = incomes.filter(x => x.id !== id);
+            if(type==='exp') expenses = expenses.filter(x => x.id !== id);
+            if(type==='sav') savings = savings.filter(x => x.id !== id);
+            if(type==='bill') bills = bills.filter(x => x.id !== id);
+            if(type==='debt') debts = debts.filter(x => x.id !== id);
+            saveAndRefresh();
+        }
+
+        function setGoal() {
+            let val = prompt("Set Monthly Budget / Target Goal ($):", monthlyGoal);
+            if(val !== null && !isNaN(val)) {
+                monthlyGoal = parseFloat(val);
+                localStorage.setItem('sheet_goal', monthlyGoal);
+                updateUI();
+            }
+        }
+
+        function saveAndRefresh() {
+            localStorage.setItem('sheet_incomes', JSON.stringify(incomes));
+            localStorage.setItem('sheet_expenses', JSON.stringify(expenses));
+            localStorage.setItem('sheet_savings', JSON.stringify(savings));
+            localStorage.setItem('sheet_bills', JSON.stringify(bills));
+            localStorage.setItem('sheet_debts', JSON.stringify(debts));
+            localStorage.setItem('sheet_calendar_events', JSON.stringify(calendarEvents));
+            initFilters();
+            updateUI();
+        }
+
+        function renderSingleMonthCalendar(selMonth) {
+            const calendarGrid = document.getElementById('calendar-grid');
+            calendarGrid.innerHTML = '';
+
+            ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'].forEach(day => {
+                let dHeader = document.createElement('div');
+                dHeader.className = "text-center text-[10px] font-bold text-neutral-500 uppercase";
+                dHeader.textContent = day;
+                calendarGrid.appendChild(dHeader);
+            });
+
+            const [year, month] = selMonth.split('-').map(Number);
+            const daysInMonth = new Date(year, month, 0).getDate();
+            const firstDayIndex = (new Date(year, month - 1, 1).getDay() + 6) % 7;
+
+            for(let i = 0; i < firstDayIndex; i++) {
+                calendarGrid.appendChild(document.createElement('div'));
+            }
+[7/29/2026 10:30 PM] Khalid: for(let d = 1; d <= daysInMonth; d++) {
+                let dayStr = ${selMonth}-${String(d).padStart(2, '0')};
+                let cell = document.createElement('div');
+                cell.className = "bg-[#121212] border border-neutral-800 rounded p-2 h-20 flex flex-col justify-between relative cursor-pointer hover:border-emerald-500 transition";
+                
+                let hasEvent = calendarEvents[dayStr];
+                if(hasEvent) cell.classList.add('border-yellow-500');
+
+                cell.innerHTML = 
+                    <span class="text-xs font-bold text-neutral-300">${d}</span>
+                    <div class="text-[9px] text-yellow-400 truncate">${hasEvent || ''}</div>
+                ;
+
+                cell.onclick = () => {
+                    let eventText = prompt(Pin special event or note for ${dayStr}:, calendarEvents[dayStr] || '');
+                    if(eventText !== null) {
+                        if(eventText.trim() === '') delete calendarEvents[dayStr];
+                        else calendarEvents[dayStr] = eventText.trim();
+                        saveAndRefresh();
+                    }
+                };
+                calendarGrid.appendChild(cell);
+            }
+        }
+
+        function renderFullYearCalendar(selYear) {
+            const container = document.getElementById('full-year-calendar-grid');
+            container.innerHTML = '';
+
+            for(let m = 1; m <= 12; m++) {
+                let monthStr = ${selYear}-${String(m).padStart(2, '0')};
+                let monthName = new Date(monthStr + "-01").toLocaleDateString('en-US', { month: 'long' });
+
+                let monthCard = document.createElement('div');
+                monthCard.className = "bg-[#121212] border border-neutral-800 rounded-lg p-3 space-y-2";
+                
+                let title = document.createElement('div');
+                title.className = "text-xs font-bold text-blue-400 uppercase tracking-wider mb-2 border-b border-neutral-800 pb-1";
+                title.textContent = monthName;
+                monthCard.appendChild(title);
+
+                let daysGrid = document.createElement('div');
+                daysGrid.className = "grid grid-cols-7 gap-1 text-center";
+
+                ['M','T','W','T','F','S','S'].forEach(d => {
+                    let dLbl = document.createElement('div');
+                    dLbl.className = "text-[9px] text-neutral-500 font-bold";
+                    dLbl.textContent = d;
+                    daysGrid.appendChild(dLbl);
+                });
+
+                const yearNum = parseInt(selYear);
+                const daysInMonth = new Date(yearNum, m, 0).getDate();
+                const firstDayIndex = (new Date(yearNum, m - 1, 1).getDay() + 6) % 7;
+
+                for(let i = 0; i < firstDayIndex; i++) {
+                    daysGrid.appendChild(document.createElement('div'));
+                }
+
+                for(let d = 1; d <= daysInMonth; d++) {
+                    let dayStr = ${monthStr}-${String(d).padStart(2, '0')};
+                    let dayCell = document.createElement('div');
+                    dayCell.className = "text-[10px] p-1 rounded bg-[#0a0a0a] border border-neutral-900 cursor-pointer hover:border-emerald-500 transition text-neutral-300 relative";
+                    
+                    if(calendarEvents[dayStr]) {
+                        dayCell.classList.add('border-yellow-500', 'text-yellow-400', 'font-bold');
+                        dayCell.title = calendarEvents[dayStr];
+                    }
+                    dayCell.textContent = d;
+
+                    dayCell.onclick = () => {
+                        let eventText = prompt(Pin special event or note for ${dayStr}:, calendarEvents[dayStr] || '');
+                        if(eventText !== null) {
+[7/29/2026 10:30 PM] Khalid: if(eventText.trim() === '') delete calendarEvents[dayStr];
+                            else calendarEvents[dayStr] = eventText.trim();
+                            saveAndRefresh();
+                        }
+                    };
+                    daysGrid.appendChild(dayCell);
+                }
+                monthCard.appendChild(daysGrid);
+                container.appendChild(monthCard);
+            }
+        }
+
+        function renderTrackAnalytics() {
+            const selectedTrack = document.getElementById('track-selector').value;
+            let rawData = [];
+            let colorHex = '#3b82f6';
+            let titleText = '';
+
+            if(selectedTrack === 'Expenses') {
+                rawData = expenses.map(e => ({ date: e.date, title: e.title, amount: e.actual }));
+                colorHex = '#ef4444';
+                titleText = 'Expenses Track (What I Spent & When)';
+            } else if(selectedTrack === 'Income') {
+                rawData = incomes.map(i => ({ date: i.date, title: i.source, amount: i.actual }));
+                colorHex = '#10b981';
+                titleText = 'Income Track (Earnings & When)';
+            } else if(selectedTrack === 'Debts') {
+                rawData = debts.map(d => ({ date: d.date, title: d.title, amount: d.amount }));
+                colorHex = '#eab308';
+                titleText = 'Debts Track (Debt Acquired & When)';
+            } else if(selectedTrack === 'Savings') {
+                rawData = savings.map(s => ({ date: s.date, title: s.title, amount: s.amount }));
+                colorHex = '#3b82f6';
+                titleText = 'Savings Track (Deposits & When)';
+            } else if(selectedTrack === 'Bills') {
+                rawData = bills.map(b => ({ date: b.date, title: b.title, amount: b.amount }));
+                colorHex = '#a855f7';
+                titleText = 'Bills Track (Bills Paid & When)';
+            }
+
+            document.getElementById('track-card-title').textContent = titleText;
+            rawData.sort((a,b) => new Date(a.date) - new Date(b.date));
+
+            let totalVol = rawData.reduce((acc, curr) => acc + curr.amount, 0);
+            document.getElementById('track-total-val').textContent = $${totalVol.toFixed(2)};
+            document.getElementById('track-peak-date').textContent = rawData.length > 0 ? rawData[rawData.length - 1].date : 'None';
+
+            const timelineContainer = document.getElementById('track-items-timeline');
+            timelineContainer.innerHTML = '';
+            if(rawData.length === 0) {
+                timelineContainer.innerHTML = <p class="text-xs text-neutral-500 italic">No records found for this track.</p>;
+            } else {
+                rawData.forEach(item => {
+                    let div = document.createElement('div');
+                    div.className = "flex justify-between items-center bg-[#0a0a0a] p-2 rounded border border-neutral-800 text-xs";
+                    div.innerHTML = 
+                        <div>
+                            <span class="text-neutral-300 font-semibold block">${item.title}</span>
+                            <span class="text-[10px] text-neutral-500">${item.date}</span>
+                        </div>
+                        <span class="font-bold text-white">$${item.amount.toFixed(2)}</span>
+                    ;
+                    timelineContainer.appendChild(div);
+                });
+            }
+
+            // Render Track Chart
+            if(trackDetailChartInst) trackDetailChartInst.destroy();
+            trackDetailChartInst = new Chart(document.getElementById('trackDetailChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: rawData.map(i => i.date),
+                    datasets: [{
+[7/29/2026 10:30 PM] Khalid: label: selectedTrack + ' Amount ($)',
+                        data: rawData.map(i => i.amount),
+                        borderColor: colorHex,
+                        backgroundColor: colorHex + '22',
+                        fill: true,
+                        tension: 0.2
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a3a3a3', boxWidth: 10 } } }, scales: { x: { ticks: { color: '#737373' }, grid: { display: false } }, y: { ticks: { color: '#737373' }, grid: { color: '#171717' } } } }
+            });
+        }
+
+        function updateUI() {
+            const selMonth = monthFilter.value || todayStr.substring(0, 7);
+            const selYear = yearFilter.value || todayStr.substring(0, 4);
+
+            // --- MONTHLY VIEW LOGIC ---
+            renderSingleMonthCalendar(selMonth);
+
+            const fInc = incomes.filter(i => i.date && i.date.startsWith(selMonth));
+            const fExp = expenses.filter(e => e.date && e.date.startsWith(selMonth));
+            const fSav = savings.filter(s => s.date && s.date.startsWith(selMonth));
+            const fBill = bills.filter(b => b.date && b.date.startsWith(selMonth));
+            const fDebt = debts.filter(d => d.date && d.date.startsWith(selMonth));
+
+            let totalIncActual = fInc.reduce((acc, i) => acc + i.actual, 0);
+            let totalExpBudget = fExp.reduce((acc, e) => acc + e.budget, 0);
+            let totalExpActual = fExp.reduce((acc, e) => acc + e.actual, 0);
+            let totalSavAmt = fSav.reduce((acc, s) => acc + s.amount, 0);
+            let totalBillsAmt = fBill.reduce((acc, b) => acc + b.amount, 0);
+            let totalDebtsAmt = fDebt.reduce((acc, d) => acc + d.amount, 0);
+
+            document.getElementById('kpi-left-budget').textContent = $${(monthlyGoal - totalExpBudget).toFixed(2)};
+            document.getElementById('kpi-total-budgeted').textContent = $${totalExpBudget.toFixed(2)};
+            document.getElementById('kpi-left-spend').textContent = $${(totalExpBudget - totalExpActual).toFixed(2)};
+            document.getElementById('kpi-total-spent').textContent = $${(totalExpActual + totalBillsAmt).toFixed(2)};
+            document.getElementById('kpi-savings-bal').textContent = $${totalSavAmt.toFixed(2)};
+
+            document.getElementById('total-income-header').textContent = $${totalIncActual.toFixed(2)};
+            document.getElementById('total-expense-header').textContent = $${totalExpActual.toFixed(2)};
+            document.getElementById('total-savings-header').textContent = $${totalSavAmt.toFixed(2)};
+            document.getElementById('total-bills-header').textContent = $${totalBillsAmt.toFixed(2)};
+            document.getElementById('total-debts-header').textContent = $${totalDebtsAmt.toFixed(2)};
+
+            renderList('income-list', fInc, 'inc', i => ${i.source} | Act: <b>$${i.actual}</b>);
+            renderList('expense-list', fExp, 'exp', e => ${e.title} | Act: <b>$${e.actual}</b>);
+            renderList('savings-list', fSav, 'sav', s => ${s.title} (ID: ${s.txId || 'N/A'}) | <b>$${s.amount}</b><br><button onclick="showProof('${s.proof}')" class='text-[10px] text-blue-400 underline'>View Proof</button>);
+            renderList('bill-list', fBill, 'bill', b => ${b.title} | <b>$${b.amount}</b>);
+            renderList('debt-list', fDebt, 'debt', d => ${d.title} | <b>$${d.amount}</b>);
+
+            let chartInc = (activeSlicer === 'ALL' || activeSlicer === 'Income') ? totalIncActual : 0;
+            let chartExp = (activeSlicer === 'ALL' || activeSlicer === 'Expenses') ? totalExpActual : 0;
+            let chartSav = (activeSlicer === 'ALL' || activeSlicer === 'Savings') ? totalSavAmt : 0;
+            let chartBills = (activeSlicer === 'ALL' || activeSlicer === 'Bills') ? totalBillsAmt : 0;
+            let chartDebt = (activeSlicer === 'ALL' || activeSlicer === 'Debts') ? totalDebtsAmt : 0;
+[7/29/2026 10:30 PM] Khalid: renderCharts(chartInc, chartExp, chartSav, chartBills, chartDebt);
+
+            // --- ANNUAL REVIEW & 12-MONTH CALENDAR LOGIC ---
+            renderFullYearCalendar(selYear);
+
+            const yInc = incomes.filter(i => i.date && i.date.startsWith(selYear));
+            const yExp = expenses.filter(e => e.date && e.date.startsWith(selYear));
+            const ySav = savings.filter(s => s.date && s.date.startsWith(selYear));
+            const yBills = bills.filter(b => b.date && b.date.startsWith(selYear));
+            const yDebts = debts.filter(d => d.date && d.date.startsWith(selYear));
+
+            let annualSpent = yExp.reduce((a,c) => a + c.actual, 0) + yBills.reduce((a,c) => a + c.amount, 0) + yDebts.reduce((a,c) => a + c.amount, 0);
+            let annualSaved = ySav.reduce((a,c) => a + c.amount, 0);
+
+            document.getElementById('annual-review-title').textContent = Annual Financial Review (${selYear}) & Spending Breakdown;
+            document.getElementById('annual-total-spent').textContent = $${annualSpent.toFixed(2)};
+            document.getElementById('annual-total-saved').textContent = $${annualSaved.toFixed(2)};
+
+            let categoryMap = {};
+            yExp.forEach(e => { categoryMap[e.title] = (categoryMap[e.title] || 0) + e.actual; });
+            yBills.forEach(b => { categoryMap[b.title] = (categoryMap[b.title] || 0) + b.amount; });
+            yDebts.forEach(d => { categoryMap[d.title] = (categoryMap[d.title] || 0) + d.amount; });
+
+            const breakdownContainer = document.getElementById('annual-spending-breakdown');
+            breakdownContainer.innerHTML = '';
+            let sortedCategories = Object.entries(categoryMap).sort((a,b) => b[1] - a[1]);
+
+            if(sortedCategories.length === 0) {
+                breakdownContainer.innerHTML = <p class="text-xs text-neutral-500 italic">No spending records found for ${selYear}.</p>;
+            } else {
+                sortedCategories.forEach(([cat, amt]) => {
+                    let pct = annualSpent > 0 ? ((amt / annualSpent) * 100).toFixed(1) : 0;
+                    let row = document.createElement('div');
+                    row.className = "flex justify-between items-center bg-[#0a0a0a] p-2 rounded border border-neutral-800 text-xs";
+                    row.innerHTML = 
+                        <span class="text-neutral-300 font-medium">${cat}</span>
+                        <div class="flex items-center gap-3">
+                            <span class="text-neutral-500 text-[10px]">${pct}%</span>
+                            <span class="text-emerald-400 font-bold">$${amt.toFixed(2)}</span>
+                        </div>
+                    ;
+                    breakdownContainer.appendChild(row);
+                });
+            }
+
+            let monthlySpentTrend = [];
+            let monthlySavedTrend = [];
+            for(let m = 1; m <= 12; m++) {
+                let mStr = ${selYear}-${String(m).padStart(2, '0')};
+                let mExp = expenses.filter(e => e.date && e.date.startsWith(mStr)).reduce((a,c)=>a+c.actual,0);
+                let mBills = bills.filter(b => b.date && b.date.startsWith(mStr)).reduce((a,c)=>a+c.amount,0);
+                let mSav = savings.filter(s => s.date && s.date.startsWith(mStr)).reduce((a,c)=>a+c.amount,0);
+                monthlySpentTrend.push(mExp + mBills);
+                monthlySavedTrend.push(mSav);
+            }
+            renderAnnualTrendChart(monthlySpentTrend, monthlySavedTrend);
+
+            if(currentView === 'tracks') {
+                renderTrackAnalytics();
+            }
+        }
+
+        function renderList(containerId, dataArray, type, templateFn) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+[7/29/2026 10:30 PM] Khalid: dataArray.forEach(item => {
+                let div = document.createElement('div');
+                div.className = "flex justify-between items-center bg-[#121212] p-2 rounded text-xs border border-neutral-800";
+                div.innerHTML = <div>${templateFn(item)}</div><button onclick="removeItem(${item.id}, '${type}')" class="text-red-500 font-bold ml-2">&times;</button>;
+                container.appendChild(div);
+            });
+        }
+
+        function renderCharts(inc, exp, sav, bills, debt) {
+            if(cashFlowChartInst) cashFlowChartInst.destroy();
+            cashFlowChartInst = new Chart(document.getElementById('cashFlowChart').getContext('2d'), {
+                type: 'doughnut',
+                data: {
+                    labels: ['Income', 'Expenses', 'Savings', 'Bills', 'Debt'],
+                    datasets: [{
+                        data: [inc  1, exp  1, sav  1, bills  1, debt || 1],
+                        backgroundColor: ['#10b981', '#ef4444', '#3b82f6', '#a855f7', '#eab308'],
+                        borderWidth: 0
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom', labels: { color: '#a3a3a3', boxWidth: 10 } } } }
+            });
+
+            if(budgetActualChartInst) budgetActualChartInst.destroy();
+            budgetActualChartInst = new Chart(document.getElementById('budgetActualChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Expenses', 'Bills', 'Debt', 'Savings'],
+                    datasets: [
+                        { label: 'Budget', data: [exp*1.2, bills*1.1, debt, sav], backgroundColor: '#3b82f6' },
+                        { label: 'Actual', data: [exp, bills, debt, sav], backgroundColor: '#10b981' }
+                    ]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a3a3a3', boxWidth: 10 } } }, scales: { x: { ticks: { color: '#737373' }, grid: { display: false } }, y: { ticks: { color: '#737373' }, grid: { color: '#171717' } } } }
+            });
+
+            if(balanceLineChartInst) balanceLineChartInst.destroy();
+            balanceLineChartInst = new Chart(document.getElementById('balanceLineChart').getContext('2d'), {
+                type: 'line',
+                data: {
+                    labels: ['Week 1', 'Week 2', 'Week 3', 'Week 4'],
+                    datasets: [{
+                        label: 'Net Balance',
+                        data: [inc*0.8, inc*0.9, inc - exp, inc - exp - bills + sav],
+                        borderColor: '#10b981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.05)',
+                        fill: true,
+                        tension: 0.3
+                    }]
+                },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#737373' }, grid: { display: false } }, y: { ticks: { color: '#737373' }, grid: { color: '#171717' } } } }
+            });
+        }
+
+        function renderAnnualTrendChart(spentData, savedData) {
+            if(annualTrendChartInst) annualTrendChartInst.destroy();
+            annualTrendChartInst = new Chart(document.getElementById('annualTrendChart').getContext('2d'), {
+                type: 'bar',
+                data: {
+                    labels: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+                    datasets: [
+                        { label: 'Spent', data: spentData, backgroundColor: '#ef4444' },
+                        { label: 'Saved', data: savedData, backgroundColor: '#3b82f6' }
+                    ]
+[7/29/2026 10:30 PM] Khalid: },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { labels: { color: '#a3a3a3', boxWidth: 10 } } }, scales: { x: { ticks: { color: '#737373' }, grid: { display: false } }, y: { ticks: { color: '#737373' }, grid: { color: '#171717' } } } }
+            });
+        }
+
+        function showProof(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').classList.remove('hidden');
+            document.getElementById('imageModal').classList.add('flex');
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').classList.remove('flex');
+            document.getElementById('imageModal').classList.add('hidden');
+        }
+
+        initFilters();
+        updateUI();
+    </script>
 </body>
 </html>
